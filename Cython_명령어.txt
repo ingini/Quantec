@@ -1,0 +1,123 @@
+Cython.Compiler.Options.docstrings= 사실 
+파이썬 확장에 docstring을 포함할지 여부. False 인 경우 이진 크기는 작아 지지만 __doc__클래스 또는 함수 의 속성은 빈 문자열입니다.
+
+Cython.Compiler.Options.embed_pos_in_docstring= 거짓 
+함수와 클래스의 docstring에 소스 코드 위치를 포함시킵니다.
+
+Cython.Compiler.Options.emit_code_comments= 사실 
+출력 소스를 이해하는 데 도움이되도록 원래 소스 코드를 생성 된 코드 파일의 C 코드 주석으로 한 행씩 복사하십시오. 커버리지 분석에도 필요합니다.
+
+Cython.Compiler.Options.generate_cleanup_code= 거짓 
+가비지 수집을 위해 종료시 각 모듈의 전역 변수를 선언합니다.
+ 0 : 없음, 1+ : 내부 객체, 2+ : cdef globals, 3+ : 객체 유형 주로 프로세스 종료시 실행되므로 Valgrind에서 노이즈를 줄입니다 (어쨌든 모든 메모리가 회수 될 때). 
+전역 변수 또는 유형을 사용하는 직접 또는 간접적으로 실행되는 정리 코드는 (참조 카운트 된) 객체가 정리되는 보장 된 순서가 없기 때문에 각 레벨을 활성화 할 때 더 이상 안전하지 않을 수 있습니다. 실시간 참조 및 참조 주기로 인해 순서가 변경 될 수 있습니다.
+
+Cython.Compiler.Options.clear_to_none= 사실 
+tp_clear ()는 객체 필드를 NULL로 지우는 대신 None으로 설정해야합니까?
+
+Cython.Compiler.Options.annotate= 거짓 
+디버깅 및 최적화 목적으로 주석이 달린 HTML 버전의 입력 소스 파일을 생성하십시오. 이는의 annotate인수 와 동일한 효과를 갖 습니다 cythonize().
+
+Cython.Compiler.Options.fast_fail= 거짓 
+계속 진행하여 추가 오류 메시지를 인쇄하지 않고 첫 번째 오류 발생시 컴파일을 중단합니다.
+
+Cython.Compiler.Options.warning_errors= 거짓 
+모든 경고를 오류로 바꾸십시오.
+
+Cython.Compiler.Options.error_on_unknown_names= 사실 
+알 수없는 이름을 오류로 만듭니다. 런타임시 알 수없는 이름이 발생하면 Python이 NameError를 발생시키는 반면이 옵션은 컴파일 시간 오류를 발생시킵니다. 완전한 파이썬 호환성을 원한다면이 옵션과 'cache_builtins'를 비활성화해야합니다.
+
+Cython.Compiler.Options.error_on_uninitialized= 사실 
+초기화되지 않은 로컬 변수 참조를 컴파일 시간 오류로 만듭니다. Python은 런타임에 UnboundLocalError를 발생시키는 반면이 옵션은 컴파일 시간 오류를 발생시킵니다. 이 옵션은 "python object"유형의 변수에만 영향을줍니다.
+
+Cython.Compiler.Options.convert_range= 사실 
+이 형태의 문으로 변환됩니다 에 경우 는 C 정수 유형 및 방향 (단계 즉, 기호)를 정의 할 수 있습니다. 경고 : 범위로 인해 할당이 오버플로되는 경우 시맨틱이 변경 될 수 있습니다. 특히이 옵션을 설정하면 루프를 입력하기 전에 오류가 발생하지만이 옵션이 없으면 오버플로 값이 발생할 때까지 루프가 실행됩니다.for i in range(...)for i from ...i
+
+Cython.Compiler.Options.cache_builtins= 사실 
+모듈 초기화시 내장 이름에서 한 번만 조회를 수행하십시오. 초기화 중에 사용하는 내장 이름을 찾을 수없는 경우 모듈을 가져 오지 못하게됩니다. 기본값은 True입니다. 일부 레거시 내장은 Python 3.x에서 빌드 할 때 Cython에 의해 Python 2 이름에서 Python 3 이름으로 자동 재 매핑되므로이 옵션이 활성화 된 경우에도 방해가되지 않습니다.
+
+Cython.Compiler.Options.gcc_branch_hints= 사실 
+오류 처리 속도를 높이기위한 분기 예측 힌트 생성
+
+Cython.Compiler.Options.lookup_module_cpdef= 거짓 
+cpdef 함수가 foo 인 경우 모든 호출에서 추가 사전 검색을 수행하여 정의를 덮어 쓰 도록 하려면 쓰기를 허용 하십시오. 이것이 거짓이면 파이썬 래퍼 만 생성하고 재정의 검사는 수행하지 않습니다.your_module.foo = ...
+
+Cython.Compiler.Options.embed= 없음 
+독립형 실행 파일을 작성하거나 외부 라이브러리에서 호출하는 데 사용하기 위해 Python 인터프리터를 임베드할지 여부입니다. 인터프리터를 초기화하고이 모듈의 본문을 실행하는 C 함수를 제공합니다. 구체적인 예는 이 데모 를 참조하십시오 . true 인 경우 초기화 함수는 C main () 함수이지만이 옵션을 비어 있지 않은 문자열로 설정하여 함수 이름을 명시 적으로 제공 할 수도 있습니다. 기본값은 거짓입니다.
+
+Cython.Compiler.Options.cimport_from_pyx= 거짓 
+pxd 파일없이 pyx 파일에서 가져 오기를 허용합니다.
+
+Cython.Compiler.Options.buffer_max_dims= 8 
+버퍼의 최대 차원 수 – 슬라이스가 값으로 전달되고 많은 복사가 포함되므로 numpy의 차원 수보다 낮게 설정됩니다.
+
+Cython.Compiler.Options.closure_freelist_size= 8 
+프리리스트에 보관할 함수 클로저 인스턴스 수 (0 : 프리리스트 없음)
+
+컴파일러 지시어 
+컴파일러 지시문은 Cython 코드의 동작에 영향을주는 명령어입니다. 현재 지원되는 지시문 목록은 다음과 같습니다.
+
+binding (허위 사실)
+자유 함수가 Python의 CFunctions (예 :)와 비슷하게 동작하는지 len()또는 True로 설정하면 Python 함수와 유사하게 제어합니다. 활성화되면 함수는 클래스 속성 (따라서 이름)으로 조회 될 때 인스턴스에 바인딩되며 인수 이름 및 주석과 같은 내부 검사를 포함하여 Python 함수의 속성을 에뮬레이션합니다. 기본값은 거짓입니다.
+boundscheck (허위 사실)
+False로 설정하면 Cython은 코드에서 인덱싱 작업 ([] -operator)으로 인해 IndexError가 발생하지 않는다고 가정합니다. 목록, 튜플 및 문자열은 인덱스가 음수가 아닌 것으로 판단 될 수있는 경우 (또는 wraparoundFalse 인 경우 ) 에만 영향을받습니다 . 일반적으로 IndexError를 유발하는 조건이 False로 설정되면 segfault 또는 데이터 손상이 발생할 수 있습니다. 기본값은 True입니다.
+wraparound (허위 사실)
+파이썬에서 배열과 시퀀스는 끝을 기준으로 인덱스 될 수 있습니다. 예를 들어 A [-1]은 목록의 마지막 값을 인덱싱합니다. C에서는 음수 색인이 지원되지 않습니다. False로 설정하면 Cython은 음수 인덱스를 확인하거나 올바르게 처리하지 못하여 segfault 또는 데이터 손상을 일으킬 수 있습니다. 경계 검사를 활성화하면 (기본값, boundschecks위 참조 ) 음수 색인을 생성하면 일반적으로 IndexErrorCython이 자체 평가하는 지수가 높아집니다. 그러나 이러한 경우는 기본 Python 배열 또는 시퀀스 객체에 의해 평가되어 랩 어라운드 인덱스를 계속 지원하는 인덱싱 또는 슬라이싱과 구별하기 위해 사용자 코드에서 인식하기 어려울 수 있습니다. 따라서 음수 인덱스를 전혀 처리하지 않는 코드에만이 옵션을 적용하는 것이 가장 안전합니다. 기본값은 True입니다.
+initializedcheck (허위 사실)
+True로 설정하면 Cython은 해당 요소에 액세스하거나 할당 될 때마다 메모리 뷰가 초기화되었는지 확인합니다. 이것을 False로 설정하면 이러한 검사가 비활성화됩니다. 기본값은 True입니다.
+nonecheck (허위 사실)
+False로 설정하면 Cython은 확장 유형으로 입력 된 변수에 대한 기본 필드 액세스 또는 버퍼 변수에 대한 버퍼 액세스가 변수가로 설정된 경우 절대 발생하지 않는다고 가정합니다 None. 그렇지 않으면 검사가 삽입되고 적절한 예외가 발생합니다. 성능상의 이유로 기본적으로 해제되어 있습니다. 기본값은 거짓입니다.
+overflowcheck (허위 사실)
+True로 설정하면 넘친 C 정수 산술 연산에서 오류가 발생합니다. 약간의 런타임 페널티가 발생하지만 Python int를 사용하는 것보다 훨씬 빠릅니다. 기본값은 거짓입니다.
+overflowcheck.fold (허위 사실)
+True로 설정하고 overflowcheck가 True 인 경우, 모든 단계가 아니라 중첩 된 부작용이없는 산술 표현식에 대해 오버 플로우 비트를 확인하십시오. 컴파일러, 아키텍처 및 최적화 설정에 따라 성능이 저하되거나 저하 될 수 있습니다. 간단한 벤치 마크 세트는에서 찾을 수 있습니다 Demos/overflow_perf.pyx. 기본값은 True입니다.
+embedsignature (허위 사실)
+True로 설정하면 Cython은 모든 Python 표시 함수 및 클래스의 docstring에 호출 서명의 텍스트 사본을 포함시킵니다. 따라서 IPython 및 epydoc과 같은 도구는 서명을 표시 할 수 있으며, 컴파일 후에는 검색 할 수 없습니다. 기본값은 거짓입니다.
+cdivision (허위 사실)
+False로 설정하면 Cython은 나머지 및 몫 연산자 C 유형을 Python int의 피연산자 (피연산자가 반대 부호를 갖는 경우와 다름)와 일치하도록 조정 ZeroDivisionError하고 오른쪽 피연산자가 0 인 경우 a를 높입니다. 속도가 최대 35 %입니다. . True로 설정하면 검사가 수행되지 않습니다. CEP 516 참조 . 기본값은 거짓입니다.
+cdivision_warnings (허위 사실)
+True로 설정하면 Cython은 음수 피연산자로 나누기를 수행 할 때마다 런타임 경고를 생성합니다. CEP 516 참조 . 기본값은 거짓입니다.
+always_allow_keywords (허위 사실)
+을 피 METH_NOARGS및 METH_O기능 0 또는 1 인수를 / 방법을 구성 할 때. 둘 이상의 인수가있는 특수 메소드 및 함수에는 영향을 미치지 않습니다. METH_NOARGS및 METH_O서명은 빠르게 호출 규칙을 제공하지만, 키워드의 사용을 허용하지.
+profile (허위 사실)
+파이썬 프로파일 러용 후크를 컴파일 된 C 코드에 작성하십시오. 기본값은 거짓입니다.
+linetrace (허위 사실)
+Python 프로파일 러 또는 커버리지보고를위한 라인 추적 후크를 컴파일 된 C 코드에 작성하십시오. 또한 프로파일 링이 가능합니다. 기본값은 거짓입니다. C 매크로 정의 CYTHON_TRACE=1를 C 컴파일러에 추가로 전달하지 않는 한 (예 : distutils 옵션 사용 define_macros) 생성 된 모듈은 실제로 행 추적을 사용하지 않습니다 . 함수와 섹션 CYTHON_TRACE_NOGIL=1도 포함하도록 정의하십시오 nogil.
+infer_types (허위 사실)
+함수 본문에서 유형이 지정되지 않은 변수 유형을 유추하십시오. 기본값은 없음으로, 안전한 (의미 적으로 변경되지 않은) 추론 만 허용됨을 나타냅니다. 특히, 산술 표현식에 사용 된 변수에 대해 정수 유형을 유추하는 것은 안전하지 않은 것으로 간주되며 (오버플로로 인해) 명시 적으로 요청해야합니다.
+language_level (2 / 3 / 3str)
+모듈 컴파일에 사용될 파이썬 언어 레벨을 전역 적으로 설정합니다. 기본적으로 Python 2와 호환됩니다. Python 3 소스 코드 시맨틱을 사용하려면 모듈 시작시이를 3 (또는 3str)으로 설정하거나 "-3"또는 "-3str"명령 행 옵션을 컴파일러에 전달하십시오. 이 3str옵션은 Python 3 의미를 활성화하지만 컴파일 된 코드가 Python 2.x에서 실행될 때 str형식과 접두사 문자열 리터럴을 변경하지 않습니다 unicode. 가져온 파일은 명시 적으로 자체 언어 수준을 설정하지 않는 한 컴파일되는 모듈에서이 설정을 상속합니다. 포함 된 소스 파일은 항상이 설정을 상속합니다.
+c_string_type (바이트 / str / 유니 코드)
+char * 또는 std :: string에서 내재 된 강제 변환 유형을 전체적으로 설정하십시오.
+c_string_encoding (ascii, default, utf-8 등)
+char * 또는 std : string을 암시 적으로 유니 코드 객체로 강제 변환 할 때 사용할 인코딩을 전역 적으로 설정합니다. 유니 코드 객체에서 C 유형으로의 강제 변환은 ascii또는로 설정 될 때만 허용 default되며, 후자는 Python 3에서는 utf-8이고 Python 2에서는 거의 항상 ASCII입니다.
+type_version_tag (허위 사실)
+type flag를 설정하여 CPython에서 확장 유형에 대한 속성 캐시를 사용합니다 Py_TPFLAGS_HAVE_VERSION_TAG. 기본값은 True이며 Cython 구현 유형에 대해 캐시가 사용 가능함을 의미합니다. tp_dict 캐시 일관성에주의를 기울이지 않고 유형이 내부적 으로 저글링해야하는 드문 경우에이를 명시 적으로 비활성화하려면 이 옵션을 False로 설정할 수 있습니다.
+unraisable_tracebacks (허위 사실)
+달성 할 수없는 예외를 억제 할 때 역 추적 인쇄 여부.
+iterable_coroutine (허위 사실)
+PEP 492 는 비동기가 아닌 상황에서 우발적 인 오용을 방지하기 위해 async-def 코 루틴을 반복 할 수 없도록 지정합니다. 그러나 이로 인해 Cython에서 async-def 코 루틴을 사용하는 이전 버전과 호환되는 코드를 작성하는 것이 어렵고 비효율적이지만 Python 3.5 이전의 asyncio와 같은 이전 yield-from 구문을 사용하는 비동기 Python 코드와 상호 작용해야합니다. 이 지시문은 모듈에 적용하거나 async-def coroutine의 데코레이터로 선택적으로 적용하여 영향을받는 coroutine을 반복 가능하게하여 yield-from과 직접 상호 운용되도록 할 수 있습니다.
+annotation_typing (허위 사실)
+함수 인수 주석을 사용하여 변수 유형을 결정합니다. 기본값은 True이지만 비활성화 할 수 있습니다. Python은 주석에 지정된 유형을 적용하지 않으므로 False로 설정하면 Python 코드와의 호환성이 향상됩니다. 전역 적으로 설정해야합니다.
+구성 가능한 최적화 
+optimize.use_switch (허위 사실)
+연결된 if-else 문 (같은 문 포함 )을 C 스위치 문 으로 확장할지 여부 많은 값이 있으면 성능상의 이점이 있지만 중복 값이 ​​있으면 컴파일러 오류가 발생합니다 (모든 C 상수에 대해 Cython 컴파일 타임에 감지 할 수 없음). 기본값은 True입니다.if x == 1 or x == 2:
+optimize.unpack_method_calls (허위 사실)
+Cython은 호출시 Python 메소드 오브젝트를 낙관적으로 점검하는 코드를 생성하고이를 호출하는 기본 함수를 압축 해제합니다. 이것은 특히 내장의 메소드 호출 속도를 크게 높일 수 있지만 추측이 완전히 잘못되는 경우 성능에 약간의 부정적인 영향을 줄 수 있습니다. 이 옵션을 비활성화하면 코드 크기를 줄일 수도 있습니다. 기본값은 True입니다.
+경고 
+모든 경고 지시문은 경고를 켜거나 끄는 옵션으로 True / False를 사용합니다.
+
+warn.undeclared (기본 거짓)
+암시 적없이 선언 된 모든 변수에 대해 경고 cdef선언
+warn.unreachable (기본 True)
+정적으로 도달 할 수없는 것으로 정적으로 결정된 코드 경로에 대해 경고합니다 (예 : 무조건 두 번 리턴).
+warn.maybe_uninitialized (기본 거짓)
+조건부 초기화되지 않은 변수 사용에 대해 경고합니다.
+warn.unused (기본 거짓)
+사용하지 않는 변수 및 선언에 대해 경고
+warn.unused_arg (기본 거짓)
+사용하지 않는 함수 인수에 대해 경고
+warn.unused_result (기본 거짓)
+같은 이름으로 사용하지 않은 할당에 대해 경고합니다. r = 2; r = 1 + 2
+warn.multiple_declarators (기본 True)
+하나 이상의 포인터 유형으로 동일한 행에 선언 된 여러 변수에 대해 경고합니다. 예를 들어 C에서와 같이 선언한다, - , 포인터로 값 유형으로하지만, 두 개의 포인터를 선언으로 mininterpreted 수 있습니다.cdef double* a, bab
