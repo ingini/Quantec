@@ -1,0 +1,35 @@
+Pymysql 와 mysql 의 차이
+
+Pymysql은 순수 python이다.
+mysqlclient는 c 언어 기반이다.   ps.Mac운영체제에서는 오류남.
+
+설치방법
+windows - pip install mysql
+
+linux - sudo apt-get install python-mysqldb
+
+centos7
+
+https://dev.mysql.com/downloads/repo/yum/    ==> 맞는 패키지 이름 확인하고 설치
+
+ centos7 에서 다음과 같이 명령하여 패키지를 다운로드합니다.
+
+1. yum -y install http://dev.mysql.com/get/mysql57-community-release-el7-11.noarch.rpm
+
+2. yum -y install mysql-community-server
+
+3. systemctl start mysqld
+
+4. systemctl enable mysqld
+
+5. mysql
+
+
+추가사항
+
+최신 버전의 mysql 최초 실행시  Access denied for user 'root'@'localhost' (using password: NO)라는 에러메시지가 나옵니다. 
+이것은 mysql root 의 패스워드가 입력되지 않아 접근이 거부된 경우입니다.
+mysql 최초 설치후 root 비밀번호는 임시로 자동 생성됩니다.
+자동 생성된 비밀번호는 /var/log/mysqld.log 에서 확인 가능합니다.
+
+
