@@ -1,0 +1,26 @@
+Cython
+method .1
+1. .pyx 파일에 클래스나 함수를 짠다
+2. cmd 창에  cython name.pyx   --pyx를 읽고 c 파일 생성
+3. gcc 컴파일러를 사용해 name.c 를 파이썬 확장 모듈로 컴파일한다
+4. 그러면 name.so 라는 파이썬에서 import 할 수 있는 c 확장 모듈 파일이 생성된다.
+5. from distutils.core import setup
+   from Cython.Build import cythonize                   를 통해 setup 함수와 cythonize helper를 import
+6. distutils 으로 Cython 프로그램 컴파일
+7. setup.py 스크립트 작성하여 .pyx 파일을 외부 모듈로 Compile 해본다.
+8. setup 함수는 distutils 에게 프로그램명과 컴파일 하려는 확장 모듈을 나타내는 key-value 를 전달한다.
+9. Cythonize helper는 Compile 하려는 cython 모듈명을 나타내는 문자열 or list를 전달 받는다.
+
+method .2 
+pyximport ==>> 간단한 스크립트 test시에만 사용...C와 Cython 동시에 컴파일 x
+
+method .3
+cmd 창에서 작성하고 test  결과를 볼 수 있음 ==> cython magic
+%load_ext cython magic  ==> import
+%%cython   ==> Cython 코드실행
+def hello_snippet():
+	print('hello')
+hello_snippet()   ==> print('hello')
+
+
+
