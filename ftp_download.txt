@@ -1,0 +1,65 @@
+import ftplib
+import os
+import datetime
+import time
+import pandas as pd
+import zipfile
+import pymysql
+
+conn = pymysql.connect(host='172.16.71.90', port=49990, user='tqtdb', password='tqtdb1!', db='hdgdb', charset='utf8')
+curs = conn.cursor()
+
+
+#date = datetime.datetime.now()
+#date = date.strftime('%Y-%m-%d')
+#print(date)
+
+
+date =['2020-02-04','2020-02-03','2020-01-31','2020-01-30','2020-01-29','2020-01-27','2020-01-24','2020-01-23','2020-01-22','2020-01-21','2020-01-20','2020-01-17','2020-01-16','2020-01-15','2020-01-14','2020-01-13','2020-01-10','2020-01-09','2020-01-08','2020-01-07','2020-01-06']
+######################Daily_Reference###################
+###Company###
+for i in range(len(date)):
+    #다운로드
+    filename = "Daily_CompanyReference"+date[i]+".zip"
+    ftp=ftplib.FTP()
+    ftp.connect("ftp.morningstar.com")
+    ftp.login("ondemandkr_qtec","8EkabaW?AmUT")
+    ftp.cwd("/Daily/NRA/Reference_v3")
+    fd = open("./" + filename,'wb')
+    ftp.retrbinary("RETR " + filename, fd.write)
+    fd.close()
+
+###Security###
+for i in range(len(date)):
+    #다운로드
+    filename = "Daily_SecurityReference"+date[i]+".zip"
+    ftp=ftplib.FTP()
+    ftp.connect("ftp.morningstar.com")
+    ftp.login("ondemandkr_qtec","8EkabaW?AmUT")
+    ftp.cwd("/Daily/NRA/Reference_v3")
+    fd = open("./" + filename,'wb')
+    ftp.retrbinary("RETR " + filename, fd.write)
+    fd.close()
+
+####################Delta_Reference#######################
+###Company###
+for i in range(len(date)):
+    filename = "Delta_CompanyReference"+date[i]+".zip"
+    ftp=ftplib.FTP()
+    ftp.connect("ftp.morningstar.com")
+    ftp.login("ondemandkr_qtec","8EkabaW?AmUT")
+    ftp.cwd("/Delta/NRA/Reference_v3")
+    fd = open("./" + filename,'wb')
+    ftp.retrbinary("RETR " + filename, fd.write)
+    fd.close()
+###Security###
+for i in range(len(date)):
+    filename = "Delta_SecurityReference"+date[i]+".zip"
+    ftp=ftplib.FTP()
+    ftp.connect("ftp.morningstar.com")
+    ftp.login("ondemandkr_qtec","8EkabaW?AmUT")
+    ftp.cwd("/Delta/NRA/Reference_v3")
+    fd = open("./" + filename,'wb')
+    ftp.retrbinary("RETR " + filename, fd.write)
+    fd.close()
+
