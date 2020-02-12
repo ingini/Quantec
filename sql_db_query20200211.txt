@@ -1,0 +1,283 @@
+sql db query
+
+SELECT * FROM CODE_M;
+
+DROP TABLE IF EXISTS CODE_M;
+CREATE TABLE `CODE_M` (
+	`Corp_code` VARCHAR(200)   ,
+	`shareclassid` VARCHAR(200)  ,
+	`Symbol` VARCHAR(200)  ,
+	primary key(`Corp_code`,`shareclassid`,`Symbol`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS Table_balancesheet;
+CREATE TABLE `Table_balancesheet` (
+	`codename` VARCHAR(200)   ,
+	`date` VARCHAR(200)  ,
+	`자산총계` VARCHAR(200)  ,
+	`유동자산` VARCHAR(200)  ,
+	`현금및현금성자산` VARCHAR(200)  ,
+	`현금` VARCHAR(200)  ,
+	`현금성자산` VARCHAR(200)  ,
+	`매출채권` VARCHAR(200)  ,
+	`단기금융자산1` VARCHAR(200)  ,
+	`단기금융자산2` VARCHAR(200)  ,
+	`단기금융자산3` VARCHAR(200)  ,
+	`재고자산` VARCHAR(200)  ,
+	`기타유동자산` VARCHAR(200)  ,
+	`비유동자산` VARCHAR(200)  ,
+	`유형자산` VARCHAR(200)  ,
+	`감가상각누계액` VARCHAR(200)  ,
+	`토지` VARCHAR(200)  ,
+	`건물및부속설비` VARCHAR(200)  ,
+	`기계장치` VARCHAR(200)  ,
+	`건설중인자산` VARCHAR(200)  ,
+	`항공기` VARCHAR(200)  ,
+	`선박` VARCHAR(200)  ,
+	`기타유형자산` VARCHAR(200)  ,
+	`무형자산` VARCHAR(200)  ,
+	`영업권` VARCHAR(200)  ,
+	`기타무형자산` VARCHAR(200)  ,
+	`관계기업등지분관련투자자산` VARCHAR(200)  ,
+	`장기매출채권및기타채권` VARCHAR(200)  ,
+	`이연법인세자산` VARCHAR(200)  ,
+	`기타비유동자산` VARCHAR(200)  ,
+	`부채총계` VARCHAR(200)  ,
+	`유동부채` VARCHAR(200)  ,
+	`단기차입금` VARCHAR(200)  ,
+	`매입채무` VARCHAR(200)  ,
+	`당기법인세부채(미지급법인세)` VARCHAR(200)  ,
+	`기타유동부채` VARCHAR(200)  ,
+	`비유동부채` VARCHAR(200)  ,
+	`장기충당부채` VARCHAR(200)  ,
+	`이연법인세부채` VARCHAR(200)  ,
+	`기타비유동부채` VARCHAR(200)  ,
+	`자본금` VARCHAR(200)  ,
+	`이익잉여금` VARCHAR(200)  ,
+	`비지배주주지분` VARCHAR(200)  ,
+	`Period` VARCHAR(200)  ,
+	`FiscalYearEnd` VARCHAR(200)  ,
+	`Currencyid` VARCHAR(200)  ,
+	`ReportType` VARCHAR(200)  ,
+	`IsCalculated` VARCHAR(200)  ,
+	`SegmentType` VARCHAR(200)  ,
+	`SegmentName` VARCHAR(200)  ,
+	`IsSubTotal` VARCHAR(200)  ,
+	`RegionName` VARCHAR(200)  ,
+	`DataType` VARCHAR(200)  ,
+	primary key(`codename`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS Table_istatement;
+CREATE TABLE `Table_istatement` (
+	`codename` VARCHAR(200)   ,
+	`date` VARCHAR(200)  ,
+	`매출액(수익)` VARCHAR(200)  ,
+	`매출원가` VARCHAR(200)  ,
+	`매출총이익` VARCHAR(200)  ,
+	`판매비와관리비` VARCHAR(200)  ,
+	`감가상각비` VARCHAR(200)  ,
+	`무형자산상각비` VARCHAR(200)  ,
+	`연구개발비` VARCHAR(200)  ,
+	`영업이익` VARCHAR(200)  ,
+	`*EBITDA` VARCHAR(200)  ,
+	`*EBIT` VARCHAR(200)  ,
+	`이자비용` VARCHAR(200)  ,
+	`이자수익` VARCHAR(200)  ,
+	`법인세비용차감전계속사업이익` VARCHAR(200)  ,
+	`당기순이익` VARCHAR(200)  ,
+	`(지배주주지분)당기순이익` VARCHAR(200)  ,
+	`(비지배주주지분)당기순이익` VARCHAR(200)  ,
+	`*주당순이익` VARCHAR(200)  ,
+	`*희석주당순이익` VARCHAR(200)  ,
+	`Period` VARCHAR(200)  ,
+	`FiscalYearEnd` VARCHAR(200)  ,
+	`Currencyid` VARCHAR(200)  ,
+	`ReportType` VARCHAR(200)  ,
+	`IsCalculated` VARCHAR(200)  ,
+	`SegmentType` VARCHAR(200)  ,
+	`SegmentName` VARCHAR(200)  ,
+	`IsSubTotal` VARCHAR(200)  ,
+	`RegionName` VARCHAR(200)  ,
+	`DataType` VARCHAR(200)  ,
+	primary key(`codename`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+
+
+DROP TABLE IF EXISTS Table_cfstatement;
+CREATE TABLE `Table_cfstatement` (
+	`codename` VARCHAR(200)   ,
+	`date` VARCHAR(200)  ,
+	`영업활동으로인한현금흐름` VARCHAR(200)  ,
+	`유형자산감가상각비` VARCHAR(200)  ,
+	`영업활동으로인한자산부채변동(운전자본변동)` VARCHAR(200)  ,
+	`영업에서창출된현금` VARCHAR(200)  ,
+	`배당금지급(영업)` VARCHAR(200)  ,
+	`배당금수취(영업)` VARCHAR(200)  ,
+	`이자지급(영업)` VARCHAR(200)  ,
+	`이자수취(영업)` VARCHAR(200)  ,
+	`법인세납부(영업)` VARCHAR(200)  ,
+	`법인세환급(영업)` VARCHAR(200)  ,
+	`투자활동으로인한현금흐름` VARCHAR(200)  ,
+	`재무활동으로인한현금흐름` VARCHAR(200)  ,
+	`배당금지급(-)` VARCHAR(200)  ,
+	`환율변동효과` VARCHAR(200)  ,
+	`현금및현금성자산의증가` VARCHAR(200)  ,
+	`기초현금및현금성자산` VARCHAR(200)  ,
+	`기말현금및현금성자산` VARCHAR(200)  ,
+	`Period` VARCHAR(200)  ,
+	`FiscalYearEnd` VARCHAR(200)  ,
+	`Currencyid` VARCHAR(200)  ,
+	`ReportType` VARCHAR(200)  ,
+	`IsCalculated` VARCHAR(200)  ,
+	`SegmentType` VARCHAR(200)  ,
+	`SegmentName` VARCHAR(200)  ,
+	`IsSubTotal` VARCHAR(200)  ,
+	`RegionName` VARCHAR(200)  ,
+	`DataType` VARCHAR(200)  ,
+	primary key(`codename`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+DROP TABLE IF EXISTS NH;
+CREATE TABLE `NH` (
+	`codename` VARCHAR(200)   ,
+	`date` VARCHAR(200)  ,
+	`현금흐름(26185)` VARCHAR(200)  ,
+	`주당배당금(29012)` VARCHAR(200)  ,
+	`배당성향(14000)` VARCHAR(200)  ,
+	`Period` VARCHAR(200)  ,
+	`FiscalYearEnd` VARCHAR(200)  ,
+	`Currencyid` VARCHAR(200)  ,
+	`ReportType` VARCHAR(200)  ,
+	`IsCalculated` VARCHAR(200)  ,
+	`SegmentType` VARCHAR(200)  ,
+	`SegmentName` VARCHAR(200)  ,
+	`IsSubTotal` VARCHAR(200)  ,
+	`RegionName` VARCHAR(200)  ,
+	`DataType` VARCHAR(200)  ,
+	primary key(`codename`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+
+DROP TABLE IF EXISTS SH;
+CREATE TABLE `SH` (
+	`codename` VARCHAR(200)   ,
+	`date` VARCHAR(200)  ,
+	`BasicEPS` VARCHAR(200)  ,
+	`NormalizedBasicEPS` VARCHAR(200)  ,
+	`BookValuePerShare` VARCHAR(200)  ,
+	`FreeCashFlow` VARCHAR(200)  ,
+	`SalesPerShare` VARCHAR(200)  ,
+	`CFOPerShare` VARCHAR(200)  ,
+	`OperationMargin` VARCHAR(200)  ,
+	`ROIC` VARCHAR(200)  ,
+	`PEGRatio` VARCHAR(200)  ,
+	`TotalAssets` VARCHAR(200)  ,
+	`GrossProfit` VARCHAR(200)  ,
+	`TotalCapitalization` VARCHAR(200)  ,
+	`Period` VARCHAR(200)  ,
+	`FiscalYearEnd` VARCHAR(200)  ,
+	`Currencyid` VARCHAR(200)  ,
+	`ReportType` VARCHAR(200)  ,
+	`IsCalculated` VARCHAR(200)  ,
+	`SegmentType` VARCHAR(200)  ,
+	`SegmentName` VARCHAR(200)  ,
+	`IsSubTotal` VARCHAR(200)  ,
+	`RegionName` VARCHAR(200)  ,
+	`DataType` VARCHAR(200)  ,
+	primary key(`codename`)
+)
+COLLATE='utf8_general_ci'
+ENGINE=InnoDB
+;
+
+COMMIT;
+
+SELECT Corp_code, shareclassid, Symbol, COUNT(*)  AS cnt
+FROM CODE_M
+GROUP BY Corp_code, shareclassid, Symbol
+HAVING cnt != 1
+;
+
+SELECT * FROM CODE_M;
+
+SELECT * FROM CODE_M
+ORDER BY 1;
+
+SELECT *
+FROM TUSA_DAILY
+WHERE CODE = 'EEM'
+AND TRADE_DATE <='2010-12-31'
+ORDER BY 1;
+
+SELECT COUNT(*) FROM CODE_M;
+WHERE Symbol LIKE '%QQQ%';
+#WHERE shareclassid LIKE '%1AV%';
+
+SELECT SYMBOL FROM CODE_MASTER_TEMP
+ORDER BY 1;
+
+SELECT *
+FROM CODE_M A LEFT JOIN CODE_MASTER B
+ON A.Symbol = B.Symbols
+UNION
+SELECT *
+FROM CODE_M A RIGHT JOIN CODE_MASTER B
+ON A.Symbol = B.Symbols;
+
+SELECT * FROM CODE_M WHERE shareclassid = '0P00000006';
+
+######################drop duplicate key update, replace 둥둥#############
+INSERT INTO CODE_M (Corp_code, shareclassid, Symbol) VALUES(%s, %s, %s) ON DUPLICATE KEY UPDATE Corp_code = %s, shareclassid = %s, Symbol = %s;
+
+SELECT COUNT(*)
+FROM CODE_M
+;
+
+* 구조 복사
+
+Create Table new_table like old_table
+
+  특징 : 기존 테이블의 설정 그대로 복사 된다.
+
+    참고 ==> 큐브리드의 경우 복사하고자 하는 기존 테이블에 'Primary Key' 또는 'auto_increment' 가 설정 되어 있으면 복사 할 수 없음.
+
+    응용 ==> Create Table IF NOT EXISTS new_table like old_table (new_table 이 없으면 복사)
+
+ 
+
+* 구조와 데이터 복사
+
+Create Table new_table ( select * from old_table )
+
+  ﻿특징 : 테이블의 구조와 함께 데이터도 함께 복사가 된다.
+
+     주의 ==> 큐브리드의 경우와 같이 기존 테이블에 'Primary Key' 또는 'auto_increment' 가 설정 되어 있으면
+
+       해당 설정은 적용 되지 않고 값만 복사 됨.
+
+ 
+
+* 데이터 복사
+
+Insert Into destination_table ( select * form source_table)
+
+  참고 ==> 대상 테이블의 컬럼 중에 자동 증가 값 설정 이 된 컬럼이 있을 경우 해당 컬럼에 데이터 입력시 중복된 데이터가 있으면 오류 발생.
+
+  응용 ==> Insert Into destination_table (column_a, column_b) (select a, b from source_table) 원하는 필드의 데이터만 복사가 가능하다.
