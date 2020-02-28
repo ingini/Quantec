@@ -1,0 +1,60 @@
+Install PyPy on CentOS
+
+
+ install-pypy.sh
+
+
+# yum list \*openssl\*
+
+
+yum install -y openssl098e
+yum install -y zlib
+ln -s /usr/lib64/libssl.so.0.9.8e /usr/lib64/libssl.so.0.9.8
+ln -s /usr/lib64/libcrypto.so.0.9.8e /usr/lib64/libcrypto.so.0.9.8
+ln -s /lib64/libbz2.so.1 /lib64/libbz2.so.1.0
+wget https://bitbucket.org/pypy/pypy/downloads/pypy-1.8-linux64.tar.bz2
+tar -xf pypy-1.8-linux64.tar.bz2
+cp -r pypy-1.8 /opt
+ln -s /opt/pypy-1.8/bin/pypy /usr/local/bin
+rm -rf pypy-1.8
+rm pypy-1.8-linux64.tar.bz2
+pypy --version
+curl -O http://python-distribute.org/distribute_setup.py
+curl -O https://raw.github.com/pypa/pip/master/contrib/get-pip.py
+pypy distribute_setup.py
+pypy get-pip.py
+rm get-pip.py
+rm distribute_setup.py
+ln -s /opt/pypy-1.8/bin/pip /usr/local/bin
+pip install pygments
+
+
+
+PS. YUM INSTALL WGET , YUM INSTALL BZIP2 
+
+
+
+cd /usr/src/
+wget -c https://bitbucket.org/pypy/pypy/downloads/pypy3-v6.0.0-src.tar.bz2
+tar -xjf pypy3-v6.0.0-src.tar.bz2
+pypy=/usr/src/pypy3-v6.0.0-src/
+
+yum -y install gcc make libffi-devel pkgconfig zlib-devel bzip2-devel \
+sqlite-devel ncurses-devel expat-devel openssl-devel tk-devel \
+gdbm-devel python-cffi\
+xz-devel
+
+yum install pypy -y
+pypy get-pip.py
+
+/usr/lib64/pypy-5.0.1/bin/pip install virtualenv
+
+pypy -m virtualenv /tmp/pypy27_venv/
+source /tmp/pypy27_venv/bin/activate
+
+pip install -r ${pypy}/requirements.txt
+
+cd ${pypy}/pypy/goal
+pypy ../../rpython/bin/rpython --opt=jit
+
+
