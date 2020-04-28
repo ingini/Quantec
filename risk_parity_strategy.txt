@@ -1,0 +1,342 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Dec 26 09:28:08 2017
+
+@author: SH-NoteBook
+"""
+
+
+from drawdown import drawdown
+import pandas as pd
+import numpy as np
+from sqlalchemy import create_engine
+
+univ_n = 12 # 전체 유니버스 etf
+top_n = 6 # 상위 몇개? 논문에선 유니버스의 절반
+paa = 2 # paa 강도
+n1 = paa*univ_n/4
+end_wealth = 1 # 가장 처음의 부는 1이다
+wealth = list() # wealth들을 계속 받아오기 위해 list 선언
+wealth_num = 0 
+turno = 0 # 가장 처음 리밸런싱을 잡기 위한 변수 ( 전략 실행 날에 turnover 100%를 잡기위한 변수)
+
+#일별 etf table을 불러오기 위한 쿼리
+engine = create_engine('mysql+mysqlconnector://root:비밀번호@localhost/exercise')
+sql = '''select trd_date, symbol, adj_prc_d, avg(adj_prc_d) over (partition by symbol order by trd_date rows between 12 preceding and current row) as sma12
+from etf_paa order by symbol,trd_date'''
+
+#raw_data에 일별 data를 받아옵니다
+raw_data = pd.read_sql(sql,engine).set_index('trd_date') 
+raw_data = pd.DataFrame(raw_data, index = pd.DataFrame(pd.to_datetime(raw_data.index))['trd_date']) # raw_data의 index를 datetime 형식으로 바꿔줌
+
+#월별 etf table을 불러오는 쿼리
+sql = '''select trd_date, symbol, adj_prc_d, avg(adj_prc_d) over (partition by symbol order by trd_date rows between 12 preceding and current row) as sma12
+from etf_paa_monthly order by symbol,trd_date'''
+raw_data_month = pd.read_sql(sql,engine).set_index('trd_date') 
+raw_data_month = pd.DataFrame(raw_data_month, index = pd.DataFrame(pd.to_datetime(raw_data_month.index))['trd_date']) # raw_data의 index를 datetime 형식으로 바꿔줌
+#리밸런싱하는 날짜를 저장합니다
+rebalancing_date = raw_data.reset_index().groupby('trd_date').count().reset_index()
+rebalancing_date = pd.DataFrame(rebalancing_date[rebalancing_date['adj_prc_d']==15]).set_index('trd_date')
+rebalancing_date = pd.DataFrame(rebalancing_date.resample('BM',how='max').index[:126]) #127 # 위에서 datetime으로 index를 변환해준 이유가 resample 함수를 사용하기 위함입니다.
+#alpha_vantage를 이용해서 받은 데이터의 헛점? 인게 2010-05-30, 2013-03-30 이 영업일인데 실제 데이터가 없기 때문에 직접 바꿔줍니다.
+rebalancing_date.iloc[36,0] = pd.to_datetime('2010-05-28')
+rebalancing_date.iloc[70,0] = pd.to_datetime('2013-03-28')
+#etf 일별 데이터를 risky_data, risk_free data로 나누어 저장 
+risky_data = raw_data[(raw_data['symbol']!='IEF')&(raw_data['symbol']!='SHY')&(raw_data['symbol']!='BIL')] # 15개의 etf중 risk_free 로 쓰이는 3개의 etf를 제외한 12개의 etf를 불러옵니다.
+risky_data['mom12'] = risky_data['adj_prc_d']/risky_data['sma12'] -1 # 논문에서 사용하는 12개월 모멘텀 column을 생성
+rf_data = raw_data[raw_data['symbol']=='IEF']   # risk free etf로 ief data만 가져와서 저장합니다.
+#etf 월별 데이터를 risky_data, risk_free data로 나누어 저장 
+risky_data_month = raw_data_month[(raw_data_month['symbol']!='IEF')&(raw_data_month['symbol']!='SHY')&(raw_data_month['symbol']!='BIL')]
+#risky_data['sma12'] = risky_data['adj_prc_d'].rolling(13).mean()  # 여기 맞음? 틀림요~
+risky_data_month['mom12'] = risky_data_month['adj_prc_d']/risky_data_month['sma12'] -1
+rf_data_month = raw_data_month[raw_data_month['symbol']=='IEF']   
+#turnover를 저장하기 위해 미리 선언해줍니다.
+turnover_day = pd.DataFrame(np.zeros(shape = (pd.DataFrame(risky_data.index).drop_duplicates().reset_index(drop=True).shape[0], pd.DataFrame(risky_data.index).drop_duplicates().reset_index(drop=True).shape[1])),index = pd.DataFrame(risky_data.index).drop_duplicates().sort_values(by=['trd_date'])['trd_date'])
+#bond_fraction이라고 해서 논문에 나와있는 비중을 구해 봅니다.
+bf_data = pd.DataFrame(np.zeros((1,len(rebalancing_date))))
+#논문에서 정의한 good etf가 매번 몇개씩 나오나 저장해봅니다.
+good_num = pd.DataFrame(np.zeros((1,len(rebalancing_date))))
+for n in range(len(rebalancing_date)-1):
+    #risky data를 받아옴
+    data = risky_data_month[risky_data_month.index==rebalancing_date.iloc[n,0]] # 리밸런싱 날짜의 data 만 가져옵니다
+    data = data[data['mom12']>0] # 모멘텀이 positive 한것만 살린다
+    good = len(data) # 몇개의 etf가 있는지 센다
+    data=data.assign(rnk=data['mom12'].rank(method='first',ascending=False)) # 12개월 누적수익률이 큰 순서대로 순위를 매깁니다. rnk 라는 column을 생성
+    data = data[data['rnk']<=top_n] # 1등부터 top_n 등까지만 살리고 나머지는 버립니다.
+    risky_data_num = len(data) # 살아남은 etf의 수를 저장합니다.
+
+    bf = (univ_n - good) / (univ_n - n1) # 논문에서 가장 중요한 bond fraction을 구합니다.
+    if good<=n1: # 만약 bf가 1보다 커지게 되면 1로 고정시킵니다
+        bf = 1
+    bf_data.iloc[0,n] = bf
+    good_num.iloc[0,n] = good
+    if good <= n1: # 안전자산에 100% 투자 (bf=1)
+        rtn_d_need=rf_data[(rf_data.index>=rebalancing_date.loc[n,'trd_date'])&(rf_data.index<=rebalancing_date.loc[n+1,'trd_date'])].reset_index() # 리밸런싱날부터 다음 리밸런싱날까지의 일별 데이타
+        #sql 쿼리 groupby를 생각하시면 좋습니다 각 symbol 별로 group을 매겨서 adj_prc_d 즉 일별 수정주가의 변화량을 rtn_d에 저장합니다.
+        rtn_d_need['rtn_d'] = rtn_d_need.groupby('symbol')['adj_prc_d'].pct_change() + 1
+        rst_rtn_d=rtn_d_need #기존에 짜둔 코드라 변수를 rst_rtn_d로 바꾸어줍니다.....
+        rst_rtn_d.loc[rst_rtn_d['trd_date']==rebalancing_date.iloc[n,0],'rtn_d'] = end_wealth  # 안전자산에 전부 투자하는 경우이기 때문에 리밸런싱 당일의 부(wealth)를 직전의 부로 바꿔줍니다.
+        rst_rtn_d['rtn_d_cum']=rst_rtn_d.groupby('symbol')['rtn_d'].cumprod() # 각 etf별 누적수익률(여기서는 안전자산 1개의 누적수익률이 됩니다.) 이전의 부 * 일별 gross return이 순차적으로 cumulative 하게 곱해져서 내려옵니다.
+        wealth.append(rst_rtn_d.groupby('trd_date').sum()['rtn_d_cum']) # 맨 위에서 wealth를 list 로 선언해주었기 때문에 append를 사용해서 추가해줍니다.
+        end_wealth = wealth[wealth_num][-1] # 마지막 부를 업데이트 해줍니다.
+        wealth_num+=1 # 다음 리밸런싱기간의 wealth를 저장할 수 있게 index를 넘깁니다.
+    
+    else: # risk etf에도 투자를 합니다(안전자산에는 할수도 있고 안할수도 있고)
+        #risk free data를 추가하기 위해 rabalancing date 자료를 받아옴
+        data_rf = rf_data[rf_data.index==rebalancing_date.iloc[n,0]]
+        data=pd.concat([data,data_rf]) # 위험자산 + 무위험자한
+        
+        rtn_d_need_cash=rf_data[(rf_data.index>=rebalancing_date.loc[n,'trd_date'])&(rf_data.index<=rebalancing_date.loc[n+1,'trd_date'])].reset_index() # 리밸런싱날부터 다음 리밸런싱날까지의 일별 데이타
+        rtn_d_need_cash['rtn_d'] = rtn_d_need_cash.groupby('symbol')['adj_prc_d'].pct_change() + 1
+        #다른 etf들의 1달 투자기간 일별데이타
+        rtn_d_need=risky_data[(risky_data.index>=rebalancing_date.loc[n,'trd_date'])&(risky_data.index<=rebalancing_date.loc[n+1,'trd_date'])].reset_index() # 리밸런싱날부터 다음 리밸런싱날까지의 일별 데이타
+        rtn_d_need['rtn_d'] = rtn_d_need.groupby('symbol')['adj_prc_d'].pct_change() + 1
+        # 일별 데이타합침
+        rtn_d_need = pd.concat([rtn_d_need,rtn_d_need_cash])
+        # 선택받은 종목들에 일별 데이타를 합
+        rst_rtn_d=pd.merge(data,rtn_d_need,how='inner',on='symbol')
+        rst_rtn_d.loc[(rst_rtn_d['trd_date']==rebalancing_date.iloc[n,0])&(rst_rtn_d['symbol']!='IEF'),'rtn_d'] = end_wealth  * (1 - bf) / risky_data_num # 위험 etf들의 리밸런싱 시작시의 부
+        rst_rtn_d.loc[(rst_rtn_d['trd_date']==rebalancing_date.iloc[n,0])&(rst_rtn_d['symbol']=='IEF'),'rtn_d'] = end_wealth  * bf #안전자산의 리밸런싱시의 부
+        rst_rtn_d['rtn_d_cum']=rst_rtn_d.groupby('symbol')['rtn_d'].cumprod() # 각 주식별 누적수익률
+        
+        
+        wealth.append(rst_rtn_d.groupby('trd_date').sum()['rtn_d_cum'])
+        end_wealth = wealth[wealth_num][-1]
+        wealth_num+=1
+    #turnover를 계산합니다.
+    if turno == 0: # 전략진입 첫날이라면
+        turnover_day.loc[rebalancing_date.iloc[n,0]] = 1 # 100% turnover
+        turno+= 1
+    else:
+        turnover_data_sum=pd.merge(rst_rtn_d[rst_rtn_d['trd_date']==rebalancing_date.iloc[n,0]],rst_rtn_d_past[rst_rtn_d_past['trd_date']==rebalancing_date.iloc[n,0]],how='outer',on='symbol')
+        turnover_data_sum = turnover_data_sum.replace(np.nan,0)  
+        turnover_day.loc[rebalancing_date.iloc[n,0]] = np.sum(abs(turnover_data_sum['rtn_d_cum_x']/np.sum(turnover_data_sum['rtn_d_cum_x'])-turnover_data_sum['rtn_d_cum_y']/np.sum(turnover_data_sum['rtn_d_cum_y'])))
+    
+    rst_rtn_d_past = rst_rtn_d
+    
+wealth = pd.concat(wealth)
+wealth=wealth[~wealth.index.duplicated(keep='first')] #중복제거 
+daily_gross_rtn=pd.DataFrame(wealth.pct_change()+1) # wealth의 누적에서 일별 gross 수익률을 구함.
+daily_gross_rtn[np.isnan(daily_gross_rtn)] = 0             # 첫번째 수익률이 nan이기 떄문에 바꿔준다.
+turnover_day = turnover_day.shift(1) * 0.003 # turnover 구한거를 리밸런싱 다음날에 반영해준다.
+sub = pd.merge(daily_gross_rtn,turnover_day,left_index=True,right_index=True)
+net_daily_gross_rtn=sub.iloc[:,0]-sub.iloc[:,1]
+net_daily_gross_rtn[0] = 1 # 누적 wealth를 구하기 위해 첫날 수익률을 1이라고 가정.
+net_wealth=net_daily_gross_rtn.cumprod()
+
+dd_port = drawdown(pd.DataFrame(net_wealth.pct_change(1)))
+mdd_port = dd_port.min() # Maximum drawdown
+    
+
+net_wealth_m = net_wealth.resample("BM",how="ffill")  # 월말 net_wealth만 저장
+port_g_rtn_12m = pd.DataFrame(net_wealth_m.pct_change(12)) # 12개월 롤링 누적 수익률 : rollint_return
+round(port_g_rtn_12m[port_g_rtn_12m>0].count()/len(port_g_rtn_12m[port_g_rtn_12m[0].notnull()]),2) # win0
+round(port_g_rtn_12m[port_g_rtn_12m>-0.05].count()/len(port_g_rtn_12m[port_g_rtn_12m[0].notnull()]),2)#win95
+마지막으로 아래 mdd 를 구하는 drawdown 함수입니다. 위 코드와 같은 파일에 넣고 실행하셔야 합니다.
+# -*- coding: utf-8 -*-
+"""
+http://henryquant.blogspot.kr/search?updated-max=2017-08-25T14:10:0%2B09:00&max-results=1&pgno=3
+"""
+import pandas as pd
+import numpy as np
+
+def drawdown(R) :
+    dd = pd.DataFrame(data = np.zeros(shape = (R.shape[0], R.shape[1])), index = R.index, columns = [R.columns])
+    R[np.isnan(R)] = 0
+    
+    for j in range(0, R.shape[1]):
+        
+        if (R.iloc[0, j] > 0) :
+            dd.iloc[0, j] = 0
+        else :
+            dd.iloc[0, j] = R.iloc[0, j]
+            
+        for i in range(1 , len(R)):
+            temp_dd = (1+dd.iloc[i-1, j]) * (1+R.iloc[i, j]) -1
+            if (temp_dd > 0) :
+                dd.iloc[i, j] = 0
+            else:
+                dd.iloc[i, j] = temp_dd
+    
+    return(dd)
+
+##########################################################################################
+
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Jan  4 13:32:00 2018
+
+@author: SH-NoteBook
+"""
+
+
+import pandas as pd
+import numpy as np
+from scipy.optimize import minimize
+
+
+def get_weights(covariances,asset_num,index_name):
+
+
+
+    # 각 자산별 원하는 risk contribution 비율을 설정합니다. risk contribution parity 이므로 
+    # 모든 자산의 risk contribution이 동일하도록 동일가중으로 설정합니다.
+    assets_risk_budget = [1 / 4] * 4
+
+    # Initial weights: equally weighted
+    # 각 자산의 최적화 시작시의 비중을 설정해줍니다. 
+    # 동일가중으로 해줍니다.
+    # 최적화 하는 함수가 concave 하다는 가정이 없으면 시작비중에 따라 운이 나쁜경우
+    # global minimum이 아닌 local minimum이 걸릴수도 있는데 우리가 최적화 하는 함수는
+    # concave 하기 때문에 아무렇게나 시작점을 잡아도 global minimum에 도달할 수 있습니다.
+    initial_weights = [1 / 4] * 4
+
+    # Optimisation의 weights 제약을 설정해 줍니다.
+    constraints = ({'type': 'eq', 'fun': lambda x: np.sum(x) - 1.0}, # 모든 자산의 비중의 합이 1 이다.
+                  {'type': 'ineq', 'fun': lambda x: x}) # 각 자산의 비중은 0크거나 같다.
+
+    # Optimisation을 해줍니다.
+    optimize_result = minimize(fun=risk_budget_objective_diff,
+                               x0=initial_weights,
+                               args=[covariances, assets_risk_budget],
+                               method='SLSQP', # https://en.wikipedia.org/wiki/Sequential_quadratic_programming
+                               constraints=constraints,
+                               tol=1e-19, # 높을수록 오래걸리지만 정확한 결과가 나온다
+                               options={'disp': False})
+
+    # 위 minimize를 통해서 구한 결과값인 weights를 받아옵니다.
+    weights = optimize_result.x
+
+    # raw index를 자산의 이름으로 변경해주고 series로 만들어줍니다. column 이름은 weight입니다.
+    weights = pd.Series(weights, index=index_name, name='weight')
+
+   
+    return weights
+
+
+def risk_budget_objective_diff(weights, args):
+  
+    covariances = args[0]
+    assets_risk_budget = args[1]
+
+    # series인 weights를 내적이 편하도록 matrix 형태로 만들어줍니다.
+    weights = np.matrix(weights)
+
+    # 비중을 통한 포트폴리오 위험 계산
+    portfolio_risk = np.sqrt((weights * covariances * weights.T))[0, 0]
+
+    #비중으로 인한 각 자산별 risk contribution 현황
+    assets_risk_contribution = np.multiply(weights.T, covariances * weights.T) / portfolio_risk
+
+    # 각 자산별로 포트폴리오의 risk을 어떻게 분배시키고 싶은지 목적
+    assets_risk_target = np.asmatrix(np.multiply(portfolio_risk, assets_risk_budget))
+
+    #위 두개의 차이를 구하고 최소화 시키도록 weight를 변화시키는것이 목적
+    diff = sum(np.square(assets_risk_contribution - assets_risk_target.T))[0, 0]
+
+
+    return diff
+# =============================================================================
+# 
+# 12-1개월 누적수익률이 높은 상위 50% 에 동일가중으로 매달 리밸런싱 하는 코드
+# ishares
+#
+# =============================================================================
+
+from drawdown import drawdown
+import pandas as pd
+import numpy as np
+from sqlalchemy import create_engine
+import risk_parity 
+
+#python과 mariadb를 연동시켜 줍니다.
+engine = create_engine('mysql+mysqlconnector://root:2tkdgns2@localhost/exercise')
+sql = 'select * from etf_ishares where etf_nm like "iShares u.s.%" or symbol = "IYY" order by symbol, trd_date asc'  # dow_jones + 섹터 etf 불러오기
+#raw_data에 데이터를 받아오며 동시에 row index를 거래일로 설정해줍니다.
+raw_data = pd.read_sql(sql,engine).set_index('trd_date') 
+
+#받아온 ETF의 심볼들을 받아서 제대로 받아왔는지 확인해봅니다.
+symbol=raw_data.groupby('symbol').count().reset_index()['symbol']
+symbol = symbol[symbol!='IYY'].reset_index(drop=True) # IYY는 벤치마크
+#raw_data의 index를 datetime 형식으로 바꿔줍니다.
+raw_data = pd.DataFrame(raw_data, index = pd.DataFrame(pd.to_datetime(raw_data.index))['trd_date']) # raw_data의 index를 datetime 형식으로 바꿔줌
+dow_jones = raw_data[raw_data['symbol']=='IYY'] # BenchMark
+
+#매 월말 리밸런싱 할 예정입니다.
+rebalancing_date = pd.DataFrame(dow_jones.resample('BM',how='max',).index[:208]) # resample에서 'M'은 그냥 월말, 'BM'은 business month 
+# 받아온 데이타 중에서 business day 기준 월말이 다른 경우가 있네 ..... 조심..
+rebalancing_date.iloc[21,0] = pd.to_datetime('2002-03-28')
+rebalancing_date.iloc[47,0] = pd.to_datetime('2004-05-28')
+rebalancing_date.iloc[119,0] = pd.to_datetime('2010-05-28')
+rebalancing_date.iloc[153,0] = pd.to_datetime('2013-03-28')
+
+end_wealth = 1 # 가장 처음의 부는 1이다
+wealth = list() # wealth들을 계속 받아오기 위해 list 선언
+wealth_num = 0 
+raw_data = raw_data[raw_data['symbol']!='IYY'] # 벤치마크는 빼고 계산...
+turnover_day = pd.DataFrame(np.zeros(shape = (pd.DataFrame(raw_data.index).drop_duplicates().reset_index(drop=True).shape[0], pd.DataFrame(raw_data.index).drop_duplicates().reset_index(drop=True).shape[1])),index = pd.DataFrame(raw_data.index).drop_duplicates().sort_values(by=['trd_date'])['trd_date']) # turnover를 저장할 공간을 선언해줍니다
+turno = 0 # 가장 처음 리밸런싱을 잡기 위한 변수
+for i in range(12,len(rebalancing_date)-1):
+    diff = pd.merge(raw_data.loc[rebalancing_date.iloc[i-1,:],:],raw_data.loc[rebalancing_date.iloc[i-12,:],:],on='symbol',how = 'inner') # 12개월 - 1 개월 누적수익률을 구하기 위해서 한달전 데이터와 12개월 전 데이터를 받아옵니다.
+    diff['12_1'] = diff['adj_prc_d_x'] / diff['adj_prc_d_y'] # 여기서 12-1 열이 12-1개월 gross return입니다.
+    diff = diff[diff.loc[:,'12_1']>np.percentile(diff.loc[:,'12_1'],50)] # percentile 함수를 써서 50% 이상인 etf만 남겨줍니다
+    rtn_d_need=raw_data[(raw_data.index>=rebalancing_date.loc[i,'trd_date'])&(raw_data.index<=rebalancing_datepd.merge(diff,rtn_d_need,how='inner',on='symbol') #diff에서 살아남은 etf에 일별 수익률 table을 merge해줍니다
+#############    추             가 #####################
+    #risk contributions parity를 만들기 위한 covariance. 1년치 일별 데이타 사용
+    cov_data = raw_data[(raw_data.index>=rebalancing_date.loc[i-12,'trd_date'])&(raw_data.index<=rebalancing_date.loc[i,'trd_date'])].reset_index() # 리밸런싱날부터 다음 리밸런싱날까지의 일별 데이타
+    cov_data['rtn_d'] = cov_data.groupby('symbol')['adj_prc_d'].pct_change() + 1
+       
+    #필요한 종목만 추려냄
+    rst_cov=pd.merge(diff,cov_data,how='inner',on='symbol')
+    #groupby를 이용해 symbol 종류를 나눈다.
+    gb = rst_cov.groupby('symbol')    
+    symbol_each_list=[gb.get_group(x) for x in gb.groups]#가 symbol 별로 따로 추출해낸다
+    index_name=rst_cov.groupby('symbol').count().T.columns # weight결과값을 뽑을 때 row index로 사용하기 위한 데이터
+    symbol_each = pd.DataFrame(np.zeros((len(symbol_each_list[0]),len(symbol_each_list)))) # list로 나눈 심볼들을 column 순으로 합침
+    for n in range(len(symbol_each_list)):
+        symbol_each.iloc[:,n] = symbol_each_list[n]['rtn_d'].reset_index(drop=True)
+    
+    symbol_cov=np.cov(symbol_each.iloc[1:, :].T) # cov
+    
+    bb =pd.DataFrame(risk_parity.get_weights(symbol_cov,len(symbol_each_list),index_name))
+    bb.iloc[n,0]
+    
+    for n in range(len(symbol_each_list)):
+        rst_rtn_d.loc[(rst_rtn_d['trd_date']==rebalancing_date.iloc[i,0])&(rst_rtn_d['symbol']==bb.index[n]),'rtn_d'] = end_wealth * bb.iloc[n,0]
+###########################################################################################################################      
+#    rst_rtn_d.loc[rst_rtn_d['trd_date']==rebalancing_date.iloc[i,0],'rtn_d'] = end_wealth  / len(diff) # 동일가중으로 투자해줍니다
+    rst_rtn_d['rtn_d_cum']=rst_rtn_d.groupby('symbol')['rtn_d'].cumprod() # 각 주식별 누적수익률
+    wealth.append(rst_rtn_d.groupby('trd_date').sum()['rtn_d_cum'])
+    end_wealth = wealth[wealth_num][-1]
+    wealth_num+=1
+    #아래는 턴오버 계산
+    if turno == 0:
+        turnover_day.loc[rebalancing_date.iloc[i,0]] = 1
+        turno+= 1
+    else:
+        turnover_data_sum=pd.merge(rst_rtn_d[rst_rtn_d['trd_date']==rebalancing_date.iloc[i,0]],rst_rtn_d_past[rst_rtn_d_past['trd_date']==rebalancing_date.iloc[i,0]],how='outer',on='symbol')
+        turnover_data_sum = turnover_data_sum.replace(np.nan,0)  
+        turnover_day.loc[rebalancing_date.iloc[i,0]] = np.sum(abs(turnover_data_sum['rtn_d_cum_x']/np.sum(turnover_data_sum['rtn_d_cum_x'])-turnover_data_sum['rtn_d_cum_y']/np.sum(turnover_data_sum['rtn_d_cum_y'])))
+    
+    rst_rtn_d_past = rst_rtn_d
+wealth = pd.concat(wealth) # 맨 마지막에 리스트를 풀어서 시리즈로 만들어줌
+wealth=wealth[~wealth.index.duplicated(keep='first')] #중복제거 
+   
+daily_gross_rtn=pd.DataFrame(wealth.pct_change()+1) # wealth의 누적에서 일별 gross 수익률을 구함.
+daily_gross_rtn[np.isnan(daily_gross_rtn)] = 0             # 첫번째 수익률이 nan이기 떄문에 바꿔준다.
+turnover_day = turnover_day.shift(1) * 0.003 # turnover 구한거를 리밸런싱 다음날에 반영해준다.
+sub = pd.merge(daily_gross_rtn,turnover_day,left_index=True,right_index=True)
+net_daily_gross_rtn=sub.iloc[:,0]-sub.iloc[:,1]
+net_daily_gross_rtn[0] = 1 # 누적 wealth를 구하기 위해 첫날 수익률을 1이라고 가정.
+net_wealth=net_daily_gross_rtn.cumprod()
+dd_port = drawdown(pd.DataFrame(wealth.pct_change(1)))
+mdd_port = dd_port.min() # Maximum drawdown
+
+#벤치마크 누적수익률 계산
+dow_jones=pd.merge(pd.DataFrame(wealth),dow_jones,left_index=True,right_index=True)
+dow_jones['index_rtn'] = dow_jones['adj_prc_d'].pct_change(1)+1
+dow_jones = dow_jones.fillna(1)
+dow_jones['rtn_d_cum']=dow_jones['index_rtn'].cumprod()
+
+dd_bench = drawdown(pd.DataFrame(dow_jones['rtn_d_cum'].pct_change(1)))
+mdd_bench = dd_bench.min()
